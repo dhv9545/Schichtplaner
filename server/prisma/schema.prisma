@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Employee {
+  id             String    @id @default(uuid())
+  name           String
+  role           String    // e.g. 'Service', 'Kitchen', 'Bar'
+  maxWeeklyHours Int       @default(40)
+  targetHours    Int       @default(30)
+  currentHours   Int       @default(0)
+  shifts         Shift[]
+  absences       Absence[]
+
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model Shift {
+  id                 String    @id @default(uuid())
+  date               String    // format 'YYYY-MM-DD'
+  startTime          String    // e.g. '08:00'
+  endTime            String    // e.g. '16:00'
+  requiredRole       String    // 'Service', 'Kitchen', 'Bar'
+  status             String    @default("OPEN") // 'ASSIGNED', 'OPEN', 'CONFLICT'
+  assignedEmployeeId String?
+  assignedEmployee   Employee? @relation(fields: [assignedEmployeeId], references: [id], onDelete: SetNull)
+
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+}
+
+model Absence {
+  id         String   @id @default(uuid())
+  date       String   // format 'YYYY-MM-DD'
+  reason     String   // e.g. 'SICK', 'VACATION'
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
